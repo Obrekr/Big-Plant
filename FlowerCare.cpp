@@ -28,13 +28,13 @@ FlowerCare::FlowerCare(BLEClient* bleclient, BLEAddress* bleaddress, Logging* lo
   for (auto const& entry : this->characteristics) {
     this->logger->debug(Logging::BLE, entry.second->toString());
   }
-  Serial.println(ESP.getFreeHeap());
   
   // Get device firmware version
   this->loadBatteryAndFirmware();
 
   this->deviceAvailable = true;
-  this->disconnect();
+  // Causes Heap Corruption
+  // this->disconnect();
   this->logger->info(Logging::FLOWERCARE, "Successfully initialized " + this->address->toString());
 }
 
@@ -50,6 +50,7 @@ bool FlowerCare::connect() {
 
 void FlowerCare::disconnect() {
   this->client->disconnect();
+  this->logger->info(Logging::FLOWERCARE, "Disconnected from " + this->address->toString());
 }
 
 void FlowerCare::loadBatteryAndFirmware() {
