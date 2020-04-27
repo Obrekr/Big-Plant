@@ -34,18 +34,26 @@ FlowerCare::FlowerCare(BLEClient* bleclient, BLEAddress* bleaddress, Logging* lo
 
   this->deviceAvailable = true;
   // Causes Heap Corruption
-  // this->disconnect();
+  //this->disconnect();
   this->logger->info(Logging::FLOWERCARE, "Successfully initialized " + this->address->toString());
 }
 
 bool FlowerCare::connect() {
   this->logger->info(Logging::FLOWERCARE, "Connecting to " + this->address->toString());
   this->client->connect(*this->address);
-  if(!this->client->isConnected()) {
+  if(!this->isConnected()) {
     this->logger->error(Logging::BLE, "Failed to connect to " + this->address->toString());
     return false;
   }
   return true;
+}
+
+bool FlowerCare::isConnected() {
+  if(this->client->isConnected() && this->client->getPeerAddress().equals(*this->address)) {
+    return true;
+  }
+  this->logger->info(Logging::BLE, "Not connected to " + this->address->toString());
+  return false;
 }
 
 void FlowerCare::disconnect() {

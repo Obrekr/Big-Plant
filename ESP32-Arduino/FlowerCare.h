@@ -28,6 +28,7 @@ class FlowerCare {
     std::string firmwareVersion = "";
 
     bool connect();
+    bool isConnected();
     void disconnect();
     void loadBatteryAndFirmware();
 };
