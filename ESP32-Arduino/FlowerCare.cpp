@@ -33,13 +33,17 @@ FlowerCare::FlowerCare(BLEClient* bleclient, BLEAddress* bleaddress, Logging* lo
 }
 
 bool FlowerCare::connect() {
+  // Connecting to device
   this->logger->info(Logging::FLOWERCARE, "Connecting to " + this->address->toString());
   this->client->connect(*this->address);
   if(!this->isConnected()) {
     this->logger->error(Logging::BLE, "Failed to connect to " + this->address->toString());
     return false;
   }
+
+  // Caching BLE services map
   this->services = this->client->getServices();
+
   return true;
 }
 
@@ -52,6 +56,34 @@ bool FlowerCare::isConnected() {
 }
 
 void FlowerCare::disconnect() {
+  /* Wait some (arbitrary) time for FreeRTOS to finish BLE stuff.
+   * If trying to disconnect too early we will corrupt heap:
+   * 
+   * CORRUPT HEAP: Bad head at 0x3ffdf3e8. Expected 0xabba1234 got 0x3ffdf41c
+   * assertion "head != NULL" failed: file "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/...
+   *     ...esp-idf/components/heap/multi_heap_poisoning.c", line 214, function: multi_heap_free
+   * abort() was called at PC 0x400e5f57 on core 0
+   * 
+   * Decoding stack results
+   * 0x40091448: invoke_abort at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/esp32/panic.c line 155
+   * 0x40091679: abort at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/esp32/panic.c line 170
+   * 0x400e72d7: __assert_func at ../../../.././newlib/libc/stdlib/assert.c line 63
+   * 0x400910d5: multi_heap_free at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/heap/multi_heap_poisoning.c line 214
+   * 0x40084b26: heap_caps_free at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/heap/heap_caps.c line 268
+   * 0x400850e1: _free_r at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/newlib/syscalls.c line 42
+   * 0x400fd4c1: osi_free_func at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/osi/allocator.c line 176
+   * 0x400fd002: list_free_node at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/osi/list.c line 245
+   * 0x400fd0c4: list_clear at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/osi/list.c line 191
+   * 0x40136d27: bta_gattc_clcb_dealloc at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/bta/gatt/bta_gattc_utils.c line 312
+   * 0x40138626: bta_gattc_close at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/bta/gatt/bta_gattc_act.c line 807
+   * 0x401363ca: bta_gattc_sm_execute at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/bta/gatt/bta_gattc_main.c line 288
+   * 0x40136509: bta_gattc_hdl_event at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/bta/gatt/bta_gattc_main.c line 397
+   * 0x4013ea46: bta_sys_event at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/bta/sys/bta_sys_main.c line 496
+   * 0x40113aae: btu_task_thread_handler at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/bt/bluedroid/stack/btu/btu_task.c line 233
+   * 0x4008e089: vPortTaskWrapper at /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/freertos/port.c line 143
+   */
+  delay(100);
+  
   // Remove pointers to BLE services, they will be invalid after disconnect
   this->services->clear();
   
