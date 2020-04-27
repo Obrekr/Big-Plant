@@ -6,35 +6,29 @@ FlowerCare::FlowerCare(BLEClient* bleclient, BLEAddress* bleaddress, Logging* lo
   this->logger = logger;
 
   // Try connecting to device
-  if(!this->connect()) {return;}
-
-  // Populate all available BLE handles with their characteristics (combining all services)
-  std::map<std::string, BLERemoteService*>* services = this->client->getServices();
-  for (auto const& entry : *services) {
-    std::map<uint16_t, BLERemoteCharacteristic*>* additionalCharaceristics = entry.second->getCharacteristicsByHandle();
-    this->characteristics.insert(additionalCharaceristics->begin(), additionalCharaceristics->end());
-  }
-
-  // Check if number of characteristics is as expected
-  char count[8];
-  itoa(this->characteristics.size(), count, 10);
-  this->logger->debug(Logging::BLE, "Device reported " + std::string(count) + " characteristics");
-  if(this->characteristics.size() != FLOWERCARE_CHARACTERISTICSCOUNT) {
-    this->logger->warning(Logging::FLOWERCARE, "Number of BLE characteristics doesn't match!");
+  if(!this->connect()) {
+    this->logger->warning(Logging::FLOWERCARE, "Could not connect");
     this->logger->warning(Logging::FLOWERCARE, "Is " + this->address->toString() + " the correct device?");
+    this->logger->error(Logging::FLOWERCARE, "Initialization failed for " + this->address->toString());
+    return;
   }
 
-  // Print out all gathered characteristics
-  for (auto const& entry : this->characteristics) {
-    this->logger->debug(Logging::BLE, entry.second->toString());
+  // Check if all expected BLE handles are present
+  if(!(this->hasHandle(FLOWERCARE_HANDLE_BATTERYFIRMWARE))) {
+    this->logger->warning(Logging::FLOWERCARE, "Some BLE handles are not available");
+    this->logger->warning(Logging::FLOWERCARE, "Is " + this->address->toString() + " the correct device?");
+    this->logger->error(Logging::FLOWERCARE, "Initialization failed for " + this->address->toString());
+    return;
   }
   
   // Get device firmware version
-  this->loadBatteryAndFirmware();
+  if(!this->loadBatteryAndFirmware()) {
+    this->logger->error(Logging::FLOWERCARE, "Initialization failed for " + this->address->toString());
+    return;
+  }
 
-  this->deviceAvailable = true;
-  // Causes Heap Corruption
-  //this->disconnect();
+  this->disconnect();
+  this->initSuccess = true;
   this->logger->info(Logging::FLOWERCARE, "Successfully initialized " + this->address->toString());
 }
 
@@ -45,6 +39,7 @@ bool FlowerCare::connect() {
     this->logger->error(Logging::BLE, "Failed to connect to " + this->address->toString());
     return false;
   }
+  this->services = this->client->getServices();
   return true;
 }
 
@@ -57,35 +52,72 @@ bool FlowerCare::isConnected() {
 }
 
 void FlowerCare::disconnect() {
+  // Remove pointers to BLE services, they will be invalid after disconnect
+  this->services->clear();
+  
+  // Disconnect BLE
   this->client->disconnect();
   this->logger->info(Logging::FLOWERCARE, "Disconnected from " + this->address->toString());
 }
 
-void FlowerCare::loadBatteryAndFirmware() {
+BLERemoteCharacteristic* FlowerCare::getCharacteristicByHandle(uint16_t handle) {
+  char stringConvert[8];
+  itoa(handle, stringConvert, 10);
+
+  for (auto const& entry : *this->services) {
+    std::map<uint16_t, BLERemoteCharacteristic*>::iterator it = entry.second->getCharacteristicsByHandle()->find(handle);
+    if(it != entry.second->getCharacteristicsByHandle()->end()) {
+      this->logger->debug(Logging::BLE, "Found characerisitc for handle " + std::string(stringConvert));
+      return it->second;
+    }
+  }
+  this->logger->warning(Logging::BLE, "Device " + this->address->toString() + " has no handle " + std::string(stringConvert));
+  return NULL;
+}
+
+bool FlowerCare::hasHandle(uint16_t handle) {
+  return this->getCharacteristicByHandle(handle) != NULL;
+}
+
+bool FlowerCare::loadBatteryAndFirmware() {
+  char count[8];
+  
   // Check if BLE client is connected
   if(!this->client->isConnected()) {
     this->logger->warning(Logging::FLOWERCARE, "Device " + this->address->toString() + "is currently unavailabel");
-    return;
+    return false;
   }
 
   // Read battery level and firmware version from BLE client
-  std::string response = this->characteristics[FLOWERCARE_HANDLE_BATTERYFIRMWARE]->readValue();
+  BLERemoteCharacteristic* characteristic = this->getCharacteristicByHandle(FLOWERCARE_HANDLE_BATTERYFIRMWARE);
+  if(characteristic == NULL) {
+    this->logger->warning(Logging::FLOWERCARE, "Cannot access battery level and firmware information");
+    this->logger->warning(Logging::FLOWERCARE, "Is " + this->address->toString() + " the correct device?");
+    return false;
+  }
+  std::string response = characteristic->readValue();
   this->logger->info(Logging::FLOWERCARE, "Getting battery level and firmware version from " + this->address->toString());  
-  char count[16];
   itoa(response.length(), count, 10);
   this->logger->debug(Logging::BLE, "Received " + std::string(count) + " bytes: " + response);
 
-  // Check if response is plausible
+  // Check if response is plausible: fixed byte count received and magic byte 1 should be 0x13 or 0x28 or 0x2A
   if(!(response.length() == FLOWERCARE_RESPONSE_BATTERYFIRMWARE && (response.at(1) == 0x13 || response.at(1) == 0x28 || response.at(1) == 0x2A))) {
     this->logger->warning(Logging::FLOWERCARE, "Device " + this->address->toString() + " response is unexpected");
+    return false;
   }
 
   // Extract battery level
   this->batteryLevel = response.at(0);
+  if(this->batteryLevel > 100) {
+    this->logger->warning(Logging::FLOWERCARE, "Device " + this->address->toString() + " reported invalid battery level");
+    return false;
+  }
   itoa(this->batteryLevel, count, 10);
   this->logger->info(Logging::FLOWERCARE, "Battery Level is " + std::string(count) + "%");
 
   // Extract firmware version
   this->firmwareVersion = response.substr(2, std::string::npos);
   this->logger->info(Logging::FLOWERCARE, "Firmware version is " + this->firmwareVersion);
+
+  return true;
 }
