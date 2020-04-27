@@ -1,7 +1,7 @@
 #include "BLEDevice.h"
 #include "Logging.h"
 #include "FlowerCare.h"
-#include "BLEClientCallback.h"
+#include "BLEInterface.h"
 
 #define SW_NAME "Pflanzen Monitor"
 #define SW_VERSION "0.1"
@@ -11,6 +11,7 @@
 Logging logger = Logging(Logging::DEBUG);
 BLEAddress bleAddress = BLEAddress(SENSOR_MAC);
 BLEClient* bleClient;
+BLEInterface* bleInterface;
 FlowerCare* sensor;
 
 void setup() {
@@ -18,8 +19,8 @@ void setup() {
   logger.startup(std::string("Version: ") + SW_VERSION);
   BLEDevice::init("");
   bleClient = BLEDevice::createClient();
-  bleClient->setClientCallbacks(new BLEClientCallback());
-  sensor = new FlowerCare(bleClient, &bleAddress, &logger);
+  bleInterface = new BLEInterfaceESP32(bleClient, &bleAddress, &logger);
+  sensor = new FlowerCare(bleInterface, &logger);
 }
 
 void loop() {

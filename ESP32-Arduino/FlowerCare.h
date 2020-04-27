@@ -1,9 +1,8 @@
 #ifndef FlowerCare_h
 #define LogFlowerCare_h
 
-#include "BLEClient.h"
+#include "BLEInterface.h"
 #include "Logging.h"
-#include <string>
 
 #define FLOWERCARE_HANDLE_BATTERYFIRMWARE 0x38
 
@@ -11,26 +10,18 @@
 
 class FlowerCare {
   public:
-    FlowerCare(BLEClient* bleclient, BLEAddress* bleaddress, Logging* logger);
+    FlowerCare(BLEInterface* p_bleInterface, Logging* p_logger);
 
-    bool isAvailabel() {return this->initSuccess = true;}
+    bool isAvailabel() {return m_initSuccess;}
 
   private:
-    BLEClient* client;
-    BLEAddress* address;
-    Logging* logger;
-    std::map<std::string, BLERemoteService*>* services;
+    BLEInterface* m_pBLEInterface;
+    Logging* m_pLogger;
+    bool m_initSuccess = false;
+    unsigned int m_batteryLevel = 0;
+    unsigned long m_batteryLastTime = 0;
+    std::string m_firmwareVersion = "";
 
-    bool initSuccess = false;
-    unsigned int batteryLevel = 0;
-    unsigned long batteryLastTime = 0;
-    std::string firmwareVersion = "";
-
-    bool connect();
-    bool isConnected();
-    void disconnect();
-    BLERemoteCharacteristic* getCharacteristicByHandle(uint16_t handle);
-    bool hasHandle(uint16_t handle);
     bool loadBatteryAndFirmware();
 };
 #endif
