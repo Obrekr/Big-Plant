@@ -8,6 +8,11 @@ BLEInterfaceESP32::BLEInterfaceESP32(BLEClient* p_bleClient, BLEAddress* p_bleAd
 }
 
 bool BLEInterfaceESP32::connect() {
+  // Check if already connected
+  if(isConnected()) {
+    return true;
+  }
+  
   // Connecting to device
   m_pLogger->info(Logging::BLE, "Connecting to " + m_identifier);
   m_pBLEClient->connect(*m_pBLEAddress);
@@ -64,6 +69,10 @@ void BLEInterfaceESP32::disconnect() {
   
   // Disconnect BLE
   m_pBLEClient->disconnect();
+
+  // Again allow some time for FreeRTOS to disconnect from BLE device
+  delay(50);
+  
   m_pLogger->info(Logging::FLOWERCARE, "Disconnected from " + m_identifier);
 }
 
@@ -76,17 +85,31 @@ std::string BLEInterfaceESP32::getIdentifier() {
 }
 
 std::string BLEInterfaceESP32::getValue(uint16_t handle) {
-  char stringConvert[8];
-  itoa(handle, stringConvert, 10);
-  
-  BLERemoteCharacteristic* characteristic = getCharacteristicByHandle(handle);
-  if(characteristic == NULL) {
-    m_pLogger->warning(Logging::BLE, "No characteristic for handle " + std::string(stringConvert));
-    return "";
+  // Check if BLE device is connected
+  if(!isConnected()) {
+    m_pLogger->warning(Logging::BLE, "BLE device " + m_identifier + " is not connected");
+    return false;
   }
+
+  // Return data from characteristic
+  BLERemoteCharacteristic* characteristic = getCharacteristicByHandle(handle);
+  if(characteristic == NULL) {return "";}
   return characteristic->readValue();
 }
 
+bool BLEInterfaceESP32::setValue(uint16_t handle, std::string data) {
+  // Check if BLE device is connected
+  if(!isConnected()) {
+    m_pLogger->warning(Logging::BLE, "BLE device " + m_identifier + " is not connected");
+    return false;
+  }
+
+  // Write data to characteristic
+  BLERemoteCharacteristic* characteristic = getCharacteristicByHandle(handle);
+  if(characteristic == NULL) {return false;}
+  characteristic->writeValue(data);
+  return true;
+}
 
 BLERemoteCharacteristic* BLEInterfaceESP32::getCharacteristicByHandle(uint16_t handle) {
   char stringConvert[8];

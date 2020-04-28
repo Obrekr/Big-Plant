@@ -12,6 +12,7 @@ class BLEInterface {
     virtual bool hasHandle(uint16_t handle);
     virtual std::string getIdentifier();
     virtual std::string getValue(uint16_t handle);
+    virtual bool setValue(uint16_t handel, std::string data);
 };
 
 class BLEInterfaceESP32 : public BLEInterface {
@@ -24,6 +25,7 @@ class BLEInterfaceESP32 : public BLEInterface {
     bool hasHandle(uint16_t handle);
     std::string getIdentifier();
     std::string getValue(uint16_t handle);
+    bool setValue(uint16_t handle, std::string data);
 
   private:
     BLEClient* m_pBLEClient;
