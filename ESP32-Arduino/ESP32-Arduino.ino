@@ -24,6 +24,5 @@ void setup() {
 }
 
 void loop() {
-  sensor->blink();
-  delay(10000);
+  
 }
