@@ -24,6 +24,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  sensor->blink();
+  delay(10000);
 }

@@ -27,6 +27,17 @@ FlowerCare::FlowerCare(BLEInterface* p_bleInterface, Logging* p_logger) {
   m_pLogger->info(Logging::FLOWERCARE, "Successfully initialized " + m_pBLEInterface->getIdentifier());
 }
 
+bool FlowerCare::blink() {
+  m_pBLEInterface->connect();
+  char transmitData[2] = {FLOWERCARE_REQUEST_BLINK && 0xFF, (FLOWERCARE_REQUEST_BLINK >> 8) && 0xFF};
+  if(m_pBLEInterface->setValue(FLOWERCARE_HANDLE_BLINK, std::string(transmitData))) {
+    m_pLogger->info(Logging::FLOWERCARE, "Successfully blinked " + m_pBLEInterface->getIdentifier());
+    return true;
+  }
+  m_pLogger->warning(Logging::FLOWERCARE, "Failed to blink " + m_pBLEInterface->getIdentifier());
+  return false;
+}
+
 bool FlowerCare::loadBatteryAndFirmware() {
   char stringConvert[8];
   
