@@ -91,10 +91,17 @@ std::string BLEInterfaceESP32::getValue(uint16_t handle) {
     return false;
   }
 
-  // Return data from characteristic
+  // Get characteristic and request data
   BLERemoteCharacteristic* characteristic = getCharacteristicByHandle(handle);
   if(characteristic == NULL) {return "";}
-  return characteristic->readValue();
+  std::string response = characteristic->readValue();
+
+  // Log received data
+  char stringConvert[16];
+  itoa(response.length(), stringConvert, 10);
+  m_pLogger->debug(Logging::BLE, "Received " + std::string(stringConvert) + " bytes: " + response);
+  
+  return response;
 }
 
 bool BLEInterfaceESP32::setValue(uint16_t handle, std::string data) {

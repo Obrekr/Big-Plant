@@ -6,13 +6,13 @@
 
 class BLEInterface {
   public:
-    virtual bool connect();
-    virtual bool isConnected();
-    virtual void disconnect();
-    virtual bool hasHandle(uint16_t handle);
-    virtual std::string getIdentifier();
-    virtual std::string getValue(uint16_t handle);
-    virtual bool setValue(uint16_t handel, std::string data);
+    virtual bool connect() = 0;
+    virtual bool isConnected() = 0;
+    virtual void disconnect() = 0;
+    virtual bool hasHandle(uint16_t handle) = 0;
+    virtual std::string getIdentifier() = 0;
+    virtual std::string getValue(uint16_t handle) = 0;
+    virtual bool setValue(uint16_t handel, std::string data) = 0;
 };
 
 class BLEInterfaceESP32 : public BLEInterface {
