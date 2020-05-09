@@ -1,12 +1,13 @@
 #ifndef SoilData_h
 #define SoilData_h
 
-#include <string>
-#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 class SoilData {
   public:
-    SoilData() {};
+    SoilData();
+    ~SoilData();
     
     void setTemperature(int temperature) {m_temperature = temperature;}
     void setBrightness(int brightness) {m_brightness = brightness;}
@@ -16,12 +17,14 @@ class SoilData {
     int getBrightness() {return m_brightness;}
     unsigned int getMoisture() {return m_moisture;}
     unsigned int getConductivity() {return m_conductivity;}
-    std::string toString();
+    char* toString();
 
   private:
+    void format(const char* p_formatString, ...);
     int m_temperature;
     int m_brightness;
     unsigned int m_moisture;
     unsigned int m_conductivity;
+    char* m_stringRepresentation;
 };
 #endif
