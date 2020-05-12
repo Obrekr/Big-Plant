@@ -1,6 +1,10 @@
 #include "Configuration.h"
 
 namespace Network {
+  const unsigned int Configuration::m_maxLengthSSID = 31;
+  const unsigned int Configuration::m_maxLengthPassphrase = 64;
+  const unsigned int Configuration::m_maxLengthHostname = 63;
+  
   Configuration::Configuration()
       : m_pSsid(NULL), m_pPassphrase(NULL), m_pHostname(NULL), m_ip(0),  m_gateway(0),  m_subnet(0)
   {
@@ -33,7 +37,7 @@ namespace Network {
   }
   
   bool Configuration::hasSSID() {
-    if(m_pSsid == NULL || strlen(m_pSsid) == 0 || strlen(m_pSsid) > 31) {
+    if(m_pSsid == NULL || strlen(m_pSsid) == 0 || strlen(m_pSsid) > m_maxLengthSSID) {
       return false;
     }
     
@@ -47,11 +51,11 @@ namespace Network {
   }
   
   bool Configuration::hasPassphrase() {
-    return m_pPassphrase!= NULL && strlen(m_pPassphrase) >= 8 && strlen(m_pPassphrase) <= 64;
+    return m_pPassphrase!= NULL && strlen(m_pPassphrase) >= 8 && strlen(m_pPassphrase) <= m_maxLengthPassphrase;
   }
   
   bool Configuration::hasHostname() {
-    return m_pHostname != NULL && strlen(m_pHostname) != 0 && strlen(m_pHostname) < 64;
+    return m_pHostname != NULL && strlen(m_pHostname) != 0 && strlen(m_pHostname) <= m_maxLengthHostname;
   }
   
   bool Configuration::hasIP() {
@@ -67,38 +71,32 @@ namespace Network {
   }
   
   char* Configuration::toString() {
-    char* tempString = new char[1000];
-    strncpy(tempString, "", 999);
-    
-    if(hasSSID()) {
-      format("SSID='%s'", m_pSsid);
-      strncat(tempString, m_pStringRepresentation, 999);
+    if(hasSSID() && hasHostname()) {
+      format("SSID='%s' Hostname='%s' IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u",
+          m_pSsid,
+          m_pHostname,
+          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
+          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
+          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+    } else if (hasSSID() && !hasHostname()) {
+      format("SSID='%s' IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u",
+          m_pSsid,
+          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
+          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
+          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+    } else if (!hasSSID() && hasHostname()) {
+      format("Hostname='%s' IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u",
+          m_pHostname,
+          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
+          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
+          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+    } else {
+      format("IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u", 
+          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
+          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
+          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
     }
     
-    if(hasHostname()) {
-      format("Hostname='%s'", m_pHostname);
-      strncat(tempString, m_pStringRepresentation, 999);
-    }
-    
-    if(hasIP()) {
-      format("IP=%u.%u.%u.%u", (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF);
-      strncat(tempString, m_pStringRepresentation, 999);
-    }
-    
-    if(hasGateway()) {
-      format("Subnet=%u.%u.%u.%u", (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF);
-      strncat(tempString, m_pStringRepresentation, 999);
-    }
-    
-    if(hasSubnet()) {
-      format("Subnet=%u.%u.%u.%u", (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
-      strncat(tempString, m_pStringRepresentation, 999);
-    }
-    
-    uint32_t finalLength = strlen(tempString);
-    delete[] m_pStringRepresentation;
-    m_pStringRepresentation = new char(finalLength + 1);
-    strncpy(m_pStringRepresentation, tempString, finalLength);
     return m_pStringRepresentation;
   }
   
@@ -106,9 +104,11 @@ namespace Network {
     va_list arguments;
     va_start(arguments, p_formatString);
   
-    size_t finalLength = vsnprintf(NULL, 0, p_formatString, arguments);
-    delete[] m_pStringRepresentation;
-    m_pStringRepresentation = new char[finalLength + 1];
-    vsnprintf(m_pStringRepresentation, finalLength + 1, p_formatString, arguments);
+    int finalLength = vsnprintf(NULL, 0, p_formatString, arguments);
+    if(finalLength > 0) {
+      delete[] m_pStringRepresentation;
+      m_pStringRepresentation = new char[finalLength + 1];
+      vsnprintf(m_pStringRepresentation, finalLength + 1, p_formatString, arguments);
+    }
   }
 }

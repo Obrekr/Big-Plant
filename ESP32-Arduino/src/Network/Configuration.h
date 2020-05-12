@@ -37,6 +37,9 @@ namespace Network {
       bool hasSubnet();
       
       char* toString();
+      uint8_t maxLengthSSID() {return m_maxLengthSSID;}
+      uint8_t maxLengthPassphrase() {return m_maxLengthPassphrase;}
+      uint8_t maxLengthHostname() {return m_maxLengthHostname;}
       
     private:
       void format(const char* p_formatString, ...);
@@ -47,6 +50,10 @@ namespace Network {
       uint32_t m_ip;
       uint32_t m_gateway;
       uint32_t m_subnet;
+      
+      static const unsigned int m_maxLengthSSID;
+      static const unsigned int m_maxLengthPassphrase;
+      static const unsigned int m_maxLengthHostname;
       
       char* m_pStringRepresentation;
   };
