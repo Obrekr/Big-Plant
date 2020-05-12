@@ -2,6 +2,23 @@
 
 namespace Sensor {
   namespace FlowerCare {
+    const char* FlowerCare::p_stringInitializationSuccess = "Successfully initialized %s";
+    const char* FlowerCare::p_stringInitializationFail = "Initialization failed for %s";
+    const char* FlowerCare::p_stringBlinkSuccess = "Successfully blinked %s";
+    const char* FlowerCare::p_stringBlinkFail = "Failed to blink %s";
+    const char* FlowerCare::p_stringDeviceUnavailable = "Device %s is currently unavailabel";
+    const char* FlowerCare::p_stringDeviceResponseUnexpected = "Device %s response is unexpected";
+    const char* FlowerCare::p_stringBatteryLevelFirmwareGet = "Getting battery level and firmware version from %s";
+    const char* FlowerCare::p_stringBatteryLevelFirmwareInvalidBattery = "Device %s reported invalid battery level";
+    const char* FlowerCare::p_stringBatteryLevel = "Battery Level is %u%%";
+    const char* FlowerCare::p_stringFirmware = "Firmware version is %s";
+    const char* FlowerCare::p_stringNameGet = "Getting device name from %s";
+    const char* FlowerCare::p_stringNameInvalid = "Device %s reported invalid name";
+    const char* FlowerCare::p_stringName = "Device Name is '%s'";
+    const char* FlowerCare::p_stringRealTimeDataSetMode = "Failed to set %s to real time mode";
+    const char* FlowerCare::p_stringRealTimeDataGet = "Getting real time data from %s";
+    const char* FlowerCare::p_stringRealTimeData = "Real time data is %s";
+    
     FlowerCare::FlowerCare(BLE::Interface* p_bleInterface, Logging::Interface* p_logger)
                           : m_pBLEInterface(p_bleInterface), m_pLogger(p_logger) {
       m_identifier = m_pBLEInterface->getIdentifier();

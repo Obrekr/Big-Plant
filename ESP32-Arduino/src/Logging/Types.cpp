@@ -30,6 +30,9 @@ namespace Logging {
       case Logging::DEBUG:
         return "DEBUG";
         break;
+      default:
+        return "";
+        break;
     }
   }
   

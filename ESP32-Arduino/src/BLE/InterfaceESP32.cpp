@@ -1,6 +1,17 @@
 #include "InterfaceESP32.h"
 
 namespace BLE {
+  const char* InterfaceESP32::p_stringConnecting = "Connecting to %s";
+  const char* InterfaceESP32::p_stringFailedToConnect = "Failed to connect to %s";
+  const char* InterfaceESP32::p_stringConnected = "Connected to %s";
+  const char* InterfaceESP32::p_stringNotConnected = "Not connected to %s";
+  const char* InterfaceESP32::p_stringDisconnected = "Disconnected from %s";
+  const char* InterfaceESP32::p_stringReceivedBytes = "Received %u bytes: %s";
+  const char* InterfaceESP32::p_stringDeviceWrong = "Is %s the correct device?";
+  const char* InterfaceESP32::p_stringSetValue = "Successfully set value for %#.2x at %s";
+  const char* InterfaceESP32::p_stringFoundCharacteristic = "Found characteristic for handle %#.2x";
+  const char* InterfaceESP32::p_stringNoHandle = "Device %s has no handle %#2x";
+  
   InterfaceESP32::InterfaceESP32(BLEClient* p_bleClient, BLEAddress* p_bleAddress, Logging::Interface* p_logger)
                                       : m_pBLEClient(p_bleClient), m_pBLEAddress(p_bleAddress), m_pLogger(p_logger) {
     m_identifier = new char[m_pBLEAddress->toString().length() + 1];
@@ -93,7 +104,7 @@ namespace BLE {
     // Check if BLE device is connected
     if(!isConnected()) {
       m_pLogger->warning(p_stringNotConnected, m_identifier);
-      return false;
+      return "";
     }
 
     // Get characteristic and request data

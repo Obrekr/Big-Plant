@@ -3,6 +3,8 @@
 #include "src/Logging/Interface.h"
 #include "src/Logging/Output.h"
 #include "src/Logging/OutputArduinoSerial.h"
+#include "src/Network/Interface.h"
+#include "src/Network/InterfaceESP32.h"
 #include "src/BLE/Interface.h"
 #include "src/BLE/InterfaceESP32.h"
 #include "src/Sensor/FlowerCare/FlowerCare.h"
@@ -15,8 +17,15 @@
 // Setup logging
 Logging::LogManager* logManager = new Logging::LogManager();
 Logging::Output* loggingOutputArduinoSerial = new Logging::OutputArduinoSerial(115200);
+Logging::Interface* loggingKernel = new Logging::Interface(Logging::KERN, Logging::DEBUG, "Kernel", logManager);
+Logging::Interface* loggingNetwork = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "Network", logManager);
 Logging::Interface* loggingBLE = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "BLE", logManager);
 Logging::Interface* loggingFlowerCare = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "FlowerCare", logManager);
+
+// Setup WiFi
+Network::Configuration* networkingAPConfig = new Network::Configuration("Hello World!", "geheimgeheimgeheim");
+Network::Configuration* networkingSTAConfig = new Network::Configuration();
+Network::Interface* networking = new Network::InterfaceESP32(networkingAPConfig, networkingSTAConfig, loggingNetwork);
 
 BLEAddress* bleAddress = new BLEAddress(SENSOR_MAC);
 BLEClient* bleClient;
@@ -25,14 +34,18 @@ Sensor::FlowerCare::FlowerCare* sensor;
 
 void setup() {
   logManager->addOutput(loggingOutputArduinoSerial);
-  //logger.startup(SW_NAME);
-  //logger.startup(std::string("Version: ") + SW_VERSION);
+  loggingKernel->info(SW_NAME);
+  loggingKernel->info("Version: %s", SW_VERSION);
   BLEDevice::init("");
   bleClient = BLEDevice::createClient();
   bleInterface = new BLE::InterfaceESP32(bleClient, bleAddress, loggingBLE);
-  sensor = new Sensor::FlowerCare::FlowerCare(bleInterface, loggingFlowerCare);
+  //sensor = new Sensor::FlowerCare::FlowerCare(bleInterface, loggingFlowerCare);
+
+  networking->APstart();
 }
 
 void loop() {
-  
+  // Check if WiFi Credentials are set & reachable (try multiple times)
+    // If not: start AP
+    
 }

@@ -4,7 +4,6 @@
 #include "esp32-hal.h"
 #include <string>
 #include "../../../SoilData.h"
-#include "LogMessages.h"
 #include "../../BLE/Interface.h"
 #include "../../Logging/Interface.h"
 
@@ -40,7 +39,7 @@ namespace Sensor {
         BLE::Interface* m_pBLEInterface;
         Logging::Interface* m_pLogger;
         
-        char* m_identifier = "";
+        char* m_identifier;
         bool m_initSuccess = false;
         unsigned int m_batteryLevel = 0;
         unsigned long m_batteryLastTime = 0;
@@ -48,6 +47,22 @@ namespace Sensor {
         char* m_deviceName;
         SoilData* m_realTimeData;
         unsigned long m_realTimeDataLastTime = 0;
+        static const char* p_stringInitializationSuccess;
+        static const char* p_stringInitializationFail;
+        static const char* p_stringBlinkSuccess;
+        static const char* p_stringBlinkFail;
+        static const char* p_stringDeviceUnavailable;
+        static const char* p_stringDeviceResponseUnexpected;
+        static const char* p_stringBatteryLevelFirmwareGet;
+        static const char* p_stringBatteryLevelFirmwareInvalidBattery;
+        static const char* p_stringBatteryLevel;
+        static const char* p_stringFirmware;
+        static const char* p_stringNameGet;
+        static const char* p_stringNameInvalid;
+        static const char* p_stringName;
+        static const char* p_stringRealTimeDataSetMode;
+        static const char* p_stringRealTimeDataGet;
+        static const char* p_stringRealTimeData;
 
         bool loadBatteryAndFirmware();
         bool loadDeviceName();

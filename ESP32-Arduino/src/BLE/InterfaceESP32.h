@@ -4,7 +4,6 @@
 #include "BLEClient.h"
 #include "esp32-hal.h"
 #include "Interface.h"
-#include "LogMessages.h"
 #include "../Logging/Interface.h"
 
 namespace BLE {
@@ -28,6 +27,16 @@ namespace BLE {
     
       char* m_identifier;
       std::map<std::string, BLERemoteService*>* m_pBLEServices;
+      static const char* p_stringConnecting;
+      static const char* p_stringFailedToConnect;
+      static const char* p_stringConnected;
+      static const char* p_stringNotConnected;
+      static const char* p_stringDisconnected;
+      static const char* p_stringReceivedBytes;
+      static const char* p_stringDeviceWrong;
+      static const char* p_stringSetValue;
+      static const char* p_stringFoundCharacteristic;
+      static const char* p_stringNoHandle;
 
       BLERemoteCharacteristic* getCharacteristicByHandle(uint16_t handle);
   };
