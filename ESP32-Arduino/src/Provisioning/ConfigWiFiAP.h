@@ -1,14 +1,14 @@
 #ifndef Provisioning_ConfigWiFiAP_h
 #define Provisioning_ConfigWiFiAP_h
 
-#include <Preferences.h>
+#include "Storage.h"
 #include "../Logging/Interface.h"
 #include "../Network/Configuration.h"
 
 namespace Provisioning {
   class ConfigWiFiAP {
     public:
-      ConfigWiFiAP(Preferences* p_preferences);
+      ConfigWiFiAP(Storage* p_storage);
       ~ConfigWiFiAP();
       
       bool load();
@@ -18,7 +18,7 @@ namespace Provisioning {
       Network::Configuration* get();
       
     private:
-      Preferences* m_pPreferences;
+      Storage* m_pStorage;
       Network::Configuration* m_pNetworkConfig;
       char* m_pSSID;
       char* m_pPassphrase;

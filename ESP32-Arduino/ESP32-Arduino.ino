@@ -4,7 +4,8 @@
 #include "src/Logging/Interface.h"
 #include "src/Logging/OutputArduinoSerial.h"
 #include "src/Network/InterfaceESP32.h"
-#include "src/Provisioning/InterfaceESP32.h"
+#include "src/Provisioning/StorageESP32.h"
+#include "src/Provisioning/Interface.h"
 #include "src/BLE/InterfaceESP32.h"
 #include "src/Sensor/FlowerCare/FlowerCare.h"
 
@@ -25,6 +26,7 @@ Logging::Interface* loggingBLE = new Logging::Interface(Logging::LOCAL0, Logging
 Logging::Interface* loggingFlowerCare = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "FlowerCare", logManager);
 
 // Setup Provisioning
+Provisioning::Storage* provisioningStorage;
 Provisioning::Interface* provisioning;
 
 // Setup WiFi
@@ -43,7 +45,8 @@ void setup() {
   loggingKernel->info("Version: %s", SW_VERSION);
 
   // Load settings from non volatile storage
-  provisioning = new Provisioning::InterfaceESP32(loggingProvisioning);
+  provisioningStorage = new Provisioning::StorageESP32(loggingProvisioning);
+  provisioning = new Provisioning::Interface(provisioningStorage, loggingProvisioning);
   
   // Bring up networking or reboot
   if(provisioning->hasConfigWiFiAP() && provisioning->getConfigWiFiAP()->hasSSID() && provisioning->getConfigWiFiAP()->hasPassphrase()) {

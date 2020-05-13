@@ -1,7 +1,7 @@
 #include "ConfigWiFiAP.h"
 
 namespace Provisioning {
-  ConfigWiFiAP::ConfigWiFiAP(Preferences* p_preferences) : m_pPreferences(p_preferences) {
+  ConfigWiFiAP::ConfigWiFiAP(Storage* p_storage) : m_pStorage(p_storage) {
     m_pNetworkConfig = new Network::Configuration();
     m_pSSID = new char();
     m_pPassphrase  = new char();
@@ -26,7 +26,7 @@ namespace Provisioning {
     // Read SSID from NVS
     maxLength = m_pNetworkConfig->maxLengthSSID();
     buffer = new char[maxLength + 1];
-    length = m_pPreferences->getString("wifiapssid", buffer, maxLength);
+    length = m_pStorage->getString("wifiapssid", buffer, maxLength);
     
     // SSID may not be empty, copy SSID to new cstring with correct length and free buffer
     if(length != 0) {
@@ -43,7 +43,7 @@ namespace Provisioning {
     // Read passphrase from NVS
     maxLength = m_pNetworkConfig->maxLengthPassphrase();
     buffer = new char[maxLength + 1];
-    length = m_pPreferences->getString("wifiappass", buffer, maxLength);
+    length = m_pStorage->getString("wifiappass", buffer, maxLength);
     
     // Passphrase may not be empty, copy passphrase to new cstring with correct length and free buffer
     if(length != 0) {
@@ -60,7 +60,7 @@ namespace Provisioning {
     // Read hostname from NVS
     maxLength = m_pNetworkConfig->maxLengthHostname();
     buffer = new char[maxLength + 1];
-    length = m_pPreferences->getString("wifiaphost", buffer, maxLength);
+    length = m_pStorage->getString("wifiaphost", buffer, maxLength);
     
     // Copy hostname to new cstring with correct length and free buffer
     if(length != 0) {
@@ -73,9 +73,9 @@ namespace Provisioning {
       delete[] buffer;
     }
     
-    m_pNetworkConfig->setIP(m_pPreferences->getUInt("wifiapip", 0));
-    m_pNetworkConfig->setGateway(m_pPreferences->getUInt("wifiapgate", 0));
-    m_pNetworkConfig->setSubnet(m_pPreferences->getUInt("wifiapsub", 0));
+    m_pNetworkConfig->setIP(m_pStorage->getUInt("wifiapip", 0));
+    m_pNetworkConfig->setGateway(m_pStorage->getUInt("wifiapgate", 0));
+    m_pNetworkConfig->setSubnet(m_pStorage->getUInt("wifiapsub", 0));
     
     return true;
   }
@@ -84,18 +84,18 @@ namespace Provisioning {
     bool ret = true;
     
     if(m_pNetworkConfig->hasSSID()) {
-      ret &= m_pPreferences->putString("wifiapssid", m_pNetworkConfig->getSSID()) != 0;
+      ret &= m_pStorage->putString("wifiapssid", m_pNetworkConfig->getSSID()) != 0;
     }
     if(m_pNetworkConfig->hasPassphrase()) {
-      ret &= m_pPreferences->putString("wifiappass", m_pNetworkConfig->getPassphrase()) != 0;
+      ret &= m_pStorage->putString("wifiappass", m_pNetworkConfig->getPassphrase()) != 0;
     }
     if(m_pNetworkConfig->hasHostname()) {
-      ret &= m_pPreferences->putString("wifiaphost", m_pNetworkConfig->getHostname()) != 0;
+      ret &= m_pStorage->putString("wifiaphost", m_pNetworkConfig->getHostname()) != 0;
     }
     
-    ret &= m_pPreferences->putUInt("wifiapip", m_pNetworkConfig->getIP()) != 0;
-    ret &= m_pPreferences->putUInt("wifiapgate", m_pNetworkConfig->getGateway()) != 0;
-    ret &= m_pPreferences->putUInt("wifiapsub", m_pNetworkConfig->getSubnet()) != 0;
+    ret &= m_pStorage->putUInt("wifiapip", m_pNetworkConfig->getIP()) != 0;
+    ret &= m_pStorage->putUInt("wifiapgate", m_pNetworkConfig->getGateway()) != 0;
+    ret &= m_pStorage->putUInt("wifiapsub", m_pNetworkConfig->getSubnet()) != 0;
     
     return ret;
   }
