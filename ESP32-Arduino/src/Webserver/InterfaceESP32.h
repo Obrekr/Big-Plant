@@ -34,6 +34,7 @@ namespace Webserver {
       static const char* m_pStringCertgenSerialStart;
       static const char* m_pStringCertgenSerial;
       static const char* m_pStringCertgenSave;
+      static const char* m_pStringSelfSignedSave;
       static const char* m_pStringSelfSignedSuccess;
   };
 }
