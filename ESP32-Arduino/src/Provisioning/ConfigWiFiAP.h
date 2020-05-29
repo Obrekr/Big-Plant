@@ -2,7 +2,6 @@
 #define Provisioning_ConfigWiFiAP_h
 
 #include "Storage.h"
-#include "../Logging/Interface.h"
 #include "../Network/Configuration.h"
 
 namespace Provisioning {

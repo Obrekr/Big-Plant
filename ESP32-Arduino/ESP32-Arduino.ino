@@ -6,6 +6,7 @@
 #include "src/Network/InterfaceESP32.h"
 #include "src/Provisioning/StorageESP32.h"
 #include "src/Provisioning/Interface.h"
+#include "src/Webserver/InterfaceESP32.h"
 #include "src/BLE/InterfaceESP32.h"
 #include "src/Sensor/FlowerCare/FlowerCare.h"
 
@@ -21,6 +22,7 @@ Logging::LogManager* logManager = new Logging::LogManager();
 Logging::Output* loggingOutputArduinoSerial = new Logging::OutputArduinoSerial(115200);
 Logging::Interface* loggingKernel = new Logging::Interface(Logging::KERN, Logging::DEBUG, "Kernel", logManager);
 Logging::Interface* loggingProvisioning = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "Provisioning", logManager);
+Logging::Interface* loggingWebserver = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "Webserver", logManager);
 Logging::Interface* loggingNetwork = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "Network", logManager);
 Logging::Interface* loggingBLE = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "BLE", logManager);
 Logging::Interface* loggingFlowerCare = new Logging::Interface(Logging::LOCAL0, Logging::DEBUG, "FlowerCare", logManager);
@@ -33,10 +35,13 @@ Provisioning::Interface* provisioning;
 Network::Configuration* networkingSTAConfig = new Network::Configuration();
 Network::Interface* networking;
 
-BLEAddress* bleAddress = new BLEAddress(SENSOR_MAC);
+//Setup Webserver
+Webserver::Interface* webserver = new Webserver::InterfaceESP32(loggingWebserver);
+
+/*BLEAddress* bleAddress = new BLEAddress(SENSOR_MAC);
 BLEClient* bleClient;
 BLE::Interface* bleInterface;
-Sensor::FlowerCare::FlowerCare* sensor;
+Sensor::FlowerCare::FlowerCare* sensor;*/
 
 void setup() {
   // Add logging outputs and print version information
@@ -46,7 +51,7 @@ void setup() {
 
   // Load settings from non volatile storage
   provisioningStorage = new Provisioning::StorageESP32(loggingProvisioning);
-  provisioning = new Provisioning::Interface(provisioningStorage, loggingProvisioning);
+  provisioning = new Provisioning::Interface(provisioningStorage, webserver, loggingProvisioning);
   
   // Bring up networking or reboot
   if(provisioning->hasConfigWiFiAP() && provisioning->getConfigWiFiAP()->hasSSID() && provisioning->getConfigWiFiAP()->hasPassphrase()) {

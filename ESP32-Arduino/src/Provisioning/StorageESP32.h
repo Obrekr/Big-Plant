@@ -11,10 +11,14 @@ namespace Provisioning{
       StorageESP32(Logging::Interface* p_logger);
       ~StorageESP32();
       
+      size_t putBytes(const char* p_key, const void* p_value, size_t length);
+      size_t getBytesLength(const char* p_key);
+      size_t getBytes(const char* p_key, void * p_buffer, size_t bufferLength);
+      
       size_t putString(const char* p_key, const char* p_string);
       size_t getString(const char* p_key, char* p_buffer, size_t bufferLength);
       
-      unsigned int putUInt(const char* p_key, unsigned int value);
+      size_t putUInt(const char* p_key, unsigned int value);
       unsigned int getUInt(const char* p_key, unsigned int defaultValue);
       
     private:

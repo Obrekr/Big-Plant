@@ -13,6 +13,18 @@ namespace Provisioning {
     preferences.end();
   }
   
+  size_t StorageESP32::putBytes(const char* p_key, const void* p_value, size_t length) {
+    return preferences.putBytes(p_key, p_value, length);
+  }
+  
+  size_t StorageESP32::getBytesLength(const char* p_key) {
+    return preferences.getBytesLength(p_key);
+  }
+  
+  size_t StorageESP32::getBytes(const char* p_key, void * p_buffer, size_t bufferLength) {
+    return preferences.getBytes(p_key, p_buffer, bufferLength);
+  }
+  
   size_t StorageESP32::putString(const char* p_key, const char* p_string) {
     return preferences.putString(p_key, p_string);
   }
@@ -25,7 +37,7 @@ namespace Provisioning {
     return preferences.getUInt(p_key, defaultValue);
   }
   
-  unsigned int StorageESP32::putUInt(const char* p_key, unsigned int value) {
+  size_t StorageESP32::putUInt(const char* p_key, unsigned int value) {
     return preferences.putUInt(p_key, value);
   }
 }
