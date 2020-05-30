@@ -34,13 +34,13 @@ namespace Provisioning {
     // Load configWeb: Private key and certificate have to be valid, else generate a new pair
     m_pConfigWeb = new ConfigWeb(m_pStorage, m_pConfigWiFiAP, m_pWebserver);
     m_pLogger->info(m_pStringWebLoading);
-    if(m_pConfigWeb->load() && m_pConfigWeb->get()->hasPrivateKey() && m_pConfigWeb->get()->hasCACertificate()) {
+    if(m_pConfigWeb->load() && m_pConfigWeb->get()->hasKey() && m_pConfigWeb->get()->hasCACertificate()) {
       m_hasConfigWeb = true;
-      m_pLogger->info(m_pStringWebSuccess, m_pConfigWeb->get()->getPrivateKey(), m_pConfigWeb->get()->getCACertificate());
+      m_pLogger->info(m_pStringWebSuccess, m_pConfigWeb->get()->getKey(), m_pConfigWeb->get()->getCACertificate());
     } else {
       if(m_pConfigWeb->generateDefault()) {
         m_hasConfigWeb = true;
-        m_pLogger->warning(m_pStringWebDefaultSuccess, m_pConfigWeb->get()->getPrivateKey(), m_pConfigWeb->get()->getCACertificate());
+        m_pLogger->warning(m_pStringWebDefaultSuccess, m_pConfigWeb->get()->getKey(), m_pConfigWeb->get()->getCACertificate());
       } else {
         m_hasConfigWeb = false;
         m_pLogger->error(m_pStringWebFail);

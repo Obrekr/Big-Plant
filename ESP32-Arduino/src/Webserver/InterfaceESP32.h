@@ -4,11 +4,11 @@
 #include "Interface.h"
 #include "Configuration.h"
 #include "../Logging/Interface.h"
-
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/x509_crt.h>
+#include <mbedtls/pem.h>
 
 namespace Webserver {
   class InterfaceESP32 : public Interface {
@@ -21,21 +21,31 @@ namespace Webserver {
       bool generateSelfSignedCertificate(Configuration* p_configuration, unsigned int keyLength, const char* p_domainName,
                                                const char* p_validFrom, const char* p_validUntil);
     private:
+      bool generateKey(Configuration* p_configuration, unsigned int keyLength);
+      bool generateCACertificate(Configuration* p_configuration, const char* p_domainName, const char* p_validFrom, const char* p_validUntil);
+      
       Logging::Interface* m_pLogger;
       static const char* m_pStringSelfSignedStart;
+      static const char* m_pStringSelfSignedKeygenFail;
+      static const char* m_pStringSelfSignedCertgenFail;
+      static const char* m_pStringSelfSignedSuccess;
       static const char* m_pStringKeygenStart;
       static const char* m_pStringKeygenRNG;
       static const char* m_pStringKeygenSetup;
       static const char* m_pStringKeygenGenerate;
       static const char* m_pStringKeygenSave;
+      static const char* m_pStringKeygenOutOfMemory;
+      static const char* m_pStringKeygenSaveFail;
       static const char* m_pStringCertgenStart;
+      static const char* m_pStringCertgenRNG;
+      static const char* m_pStringCertgenPK;
       static const char* m_pStringCertgenName;
       static const char* m_pStringCertgenValidFromUntil;
       static const char* m_pStringCertgenSerialStart;
       static const char* m_pStringCertgenSerial;
       static const char* m_pStringCertgenSave;
-      static const char* m_pStringSelfSignedSave;
-      static const char* m_pStringSelfSignedSuccess;
+      static const char* m_pStringCertgenOutOfMemory;
+      static const char* m_pStringCertgenSaveFail;
   };
 }
 #endif

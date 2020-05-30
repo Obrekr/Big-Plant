@@ -2,19 +2,26 @@
 
 namespace Webserver {
   const char* InterfaceESP32::m_pStringSelfSignedStart = "Starting generation of self signed certificate";
-  const char* InterfaceESP32::m_pStringKeygenStart = "Starting private key generation. This will take about 11 minutes";
+  const char* InterfaceESP32::m_pStringSelfSignedKeygenFail = "Failed to generate public key";
+  const char* InterfaceESP32::m_pStringSelfSignedCertgenFail = "Failed to generate x509 certificate";
+  const char* InterfaceESP32::m_pStringSelfSignedSuccess = "Successfully created self signed certificate";
+  const char* InterfaceESP32::m_pStringKeygenStart = "Starting public key generation. This will take about 11 minutes";
   const char* InterfaceESP32::m_pStringKeygenRNG = "Creating RNG for key generation failed";
   const char* InterfaceESP32::m_pStringKeygenSetup = "Setup for key generation failed";
-  const char* InterfaceESP32::m_pStringKeygenGenerate = "Generating private key failed";
-  const char* InterfaceESP32::m_pStringKeygenSave = "Failed to save generated private key";
-  const char* InterfaceESP32::m_pStringCertgenStart = "Starting X509 certificate generation";
+  const char* InterfaceESP32::m_pStringKeygenGenerate = "Generating public key failed";
+  const char* InterfaceESP32::m_pStringKeygenSave = "Saving public key";
+  const char* InterfaceESP32::m_pStringKeygenOutOfMemory = "Out of memory for saveing public key";
+  const char* InterfaceESP32::m_pStringKeygenSaveFail = "Failed to save generated public key";
+  const char* InterfaceESP32::m_pStringCertgenStart = "Starting x509 certificate generation";
+  const char* InterfaceESP32::m_pStringCertgenRNG = "Creating RNG for key generation failed";
+  const char* InterfaceESP32::m_pStringCertgenPK = "Failed to load the public key";
   const char* InterfaceESP32::m_pStringCertgenName = "Setting domain name '%s' for certificate failed";
   const char* InterfaceESP32::m_pStringCertgenValidFromUntil = "Setting valid from '%s' until '%s' for certificate failed";
   const char* InterfaceESP32::m_pStringCertgenSerialStart = "Started calculating serial number for certificate";
   const char* InterfaceESP32::m_pStringCertgenSerial = "Generating serial number for certificate failed";
-  const char* InterfaceESP32::m_pStringCertgenSave = "Failed to save generated certificate";
-  const char* InterfaceESP32::m_pStringSelfSignedSave = "Saving self signed certificate";
-  const char* InterfaceESP32::m_pStringSelfSignedSuccess = "Successfully created self signed certificate";
+  const char* InterfaceESP32::m_pStringCertgenSave = "Saving x509 certificate";
+  const char* InterfaceESP32::m_pStringCertgenOutOfMemory = "Out of memory for saving x509 certificate";
+  const char* InterfaceESP32::m_pStringCertgenSaveFail = "Failed to save generated certificate";
   
   InterfaceESP32::InterfaceESP32(Logging::Interface* p_logger) : m_pLogger(p_logger) {
     
@@ -29,14 +36,29 @@ namespace Webserver {
   }
   
   bool InterfaceESP32::generateSelfSignedCertificate(Configuration* p_configuration, unsigned int keyLength, const char* p_domainName,
-                                                     const char* p_validFrom, const char* p_validUntil) {
-    m_pLogger->info(m_pStringSelfSignedStart);
+      const char* p_validFrom, const char* p_validUntil) {
+      m_pLogger->info(m_pStringSelfSignedStart);
+      
+      if(!generateKey(p_configuration, keyLength)) {
+        m_pLogger->error(m_pStringSelfSignedKeygenFail);
+        return false;
+      }
+      
+      if(!generateCACertificate(p_configuration, p_domainName, p_validFrom, p_validUntil)) {
+        m_pLogger->error(m_pStringSelfSignedCertgenFail);
+        return false;
+      }
+      
+      m_pLogger->info(m_pStringSelfSignedSuccess);
+      return true;
+    }
+    
+  bool InterfaceESP32::generateKey(Configuration* p_configuration, unsigned int keyLength) {
+    m_pLogger->info(m_pStringKeygenStart);
+    
     bool ret;
     mbedtls_pk_context* key = NULL;
-    mbedtls_x509write_cert* crt;
-    mbedtls_mpi* serial;
-    unsigned char* p_privateKey = NULL;
-    unsigned char* p_x509Cert = NULL;
+    unsigned char* p_publicKey = NULL;
     
     // Initialize entropy and rng
     mbedtls_entropy_context* entropy = new mbedtls_entropy_context;
@@ -51,8 +73,7 @@ namespace Webserver {
       goto cleanupEntropy;
     }
     
-    // Generate private key
-    m_pLogger->info(m_pStringKeygenStart);
+    // Generate public key
     key = new mbedtls_pk_context;
     mbedtls_pk_init(key);
     if(mbedtls_pk_setup(key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)) != 0) {
@@ -67,8 +88,71 @@ namespace Webserver {
       goto cleanupPk;
     }
     
-    // Generate X509 certificate with the private key
+    // Save public key
+    m_pLogger->info(m_pStringKeygenSave);
+    p_publicKey = new unsigned char[p_configuration->maxLengthKey()];
+    if(p_publicKey == NULL) {
+      m_pLogger->error(m_pStringKeygenOutOfMemory);
+      ret = false;
+      goto cleanupPk;
+    }
+    if(mbedtls_pk_write_key_pem(key, p_publicKey, p_configuration->maxLengthKey()) != 0) {
+      m_pLogger->error(m_pStringKeygenSaveFail);
+      delete[] p_publicKey;
+      ret = false;
+      goto cleanupPk;
+    }
+    p_configuration->setKey(p_publicKey);
+    ret = true;
+    
+    // Clean up and return
+  cleanupPk:
+    mbedtls_pk_free(key);
+  cleanupDrbg:
+    mbedtls_ctr_drbg_free(ctr_drbg);
+    delete key;
+  cleanupEntropy:
+    mbedtls_entropy_free(entropy);
+    delete ctr_drbg;
+    delete entropy;
+    return ret;
+  }
+  
+  bool InterfaceESP32::generateCACertificate(Configuration* p_configuration, const char* p_domainName, const char* p_validFrom, const char* p_validUntil) {
     m_pLogger->info(m_pStringCertgenStart);
+    
+    bool ret;
+    mbedtls_pk_context* key = NULL;
+    mbedtls_x509write_cert* crt;
+    mbedtls_mpi* serial;
+    unsigned char* p_x509CertDER = NULL;
+    unsigned char* p_x509CertPEM = NULL;
+    int p_x509CertDERLength = 0;
+    size_t p_x509CertPEMLength = 0;
+    
+    // Initialize entropy and rng
+    mbedtls_entropy_context* entropy = new mbedtls_entropy_context;
+    mbedtls_entropy_init(entropy);
+    
+    mbedtls_ctr_drbg_context* ctr_drbg = new mbedtls_ctr_drbg_context;
+    mbedtls_ctr_drbg_init(ctr_drbg);
+      
+    if(mbedtls_ctr_drbg_seed(ctr_drbg, mbedtls_entropy_func, entropy, NULL, 0) != 0) {
+      m_pLogger->error(m_pStringCertgenRNG);
+      ret = false;
+      goto cleanupEntropy;
+    }
+    
+    // Load public key
+    key = new mbedtls_pk_context;
+    mbedtls_pk_init(key);
+    if(!p_configuration->hasKey() || mbedtls_pk_parse_key(key, p_configuration->getKey(), strlen((char*) p_configuration->getKey()) + 1, NULL, 0) != 0) {
+      m_pLogger->error(m_pStringCertgenPK);
+      ret = false;
+      goto cleanupDrbg;
+    }
+    
+    // Generate X509 certificate with the public key
     crt = new mbedtls_x509write_cert;
     mbedtls_x509write_crt_init(crt);
     
@@ -92,38 +176,38 @@ namespace Webserver {
     m_pLogger->info(m_pStringCertgenSerialStart);
     serial = new mbedtls_mpi;
     mbedtls_mpi_init(serial);
-    if(mbedtls_mpi_read_string( serial, 10, "1" ) != 0 || mbedtls_x509write_crt_set_serial( crt, serial ) != 0) {
+    if(mbedtls_mpi_read_string(serial, 10, "1") != 0 || mbedtls_x509write_crt_set_serial(crt, serial) != 0) {
       m_pLogger->error(m_pStringCertgenSerial);
       ret = false;
       goto cleanupMpi;
     }
-    mbedtls_mpi_free(serial);
-    delete serial;
     
-    // Save private key
-    m_pLogger->info(m_pStringSelfSignedSave);
-    p_privateKey = new unsigned char[p_configuration->maxLengthPrivateKey()];
-    if(mbedtls_pk_write_key_pem(key, p_privateKey, p_configuration->maxLengthPrivateKey()) != 0) {
-      m_pLogger->error(m_pStringKeygenSave);
-      delete p_privateKey;
+    // Save X509 certificate as PEM
+    m_pLogger->info(m_pStringCertgenSave);
+    p_x509CertDER = new unsigned char[p_configuration->maxLengthCACertificate()];
+    p_x509CertPEM = new unsigned char[p_configuration->maxLengthCACertificate()];
+    if(p_x509CertDER == NULL || p_x509CertPEM == NULL) {
+      m_pLogger->error(m_pStringCertgenOutOfMemory);
       ret = false;
-      goto cleanupX509write;
+      goto cleanupMpi;
     }
-    p_configuration->setPrivateKey(p_privateKey);
-    
-    // Save X509 certificate
-    p_x509Cert = new unsigned char[p_configuration->maxLengthCACertificate()];
-    if(mbedtls_x509write_crt_pem(crt, p_x509Cert, p_configuration->maxLengthCACertificate(), mbedtls_ctr_drbg_random, ctr_drbg) != 0) {
-      m_pLogger->error(m_pStringCertgenSave);
-      delete p_x509Cert;
+   /* Save as DER certificate first. mbedtls_x509write_crt_der(...) will use 2048 bytes on the stack.
+    * Do not use mbedtls_x509write_crt_pem(...) as it will us 4096 bytes on the stack and call
+    * mbedtls_x509write_crt_der(...) anyway. This will cause a stack overflow.
+    * Instead convert DER certificate to PEM directly.
+    */
+    if((p_x509CertDERLength = mbedtls_x509write_crt_der(crt, p_x509CertDER, p_configuration->maxLengthCACertificate(), mbedtls_ctr_drbg_random, ctr_drbg)) < 0
+       || mbedtls_pem_write_buffer("-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n", p_x509CertDER + sizeof(p_x509CertDER) - p_x509CertDERLength,
+                                   p_x509CertDERLength, p_x509CertPEM, p_configuration->maxLengthCACertificate(), &p_x509CertPEMLength) != 0) {
+      m_pLogger->error(m_pStringCertgenSaveFail);
+      delete[] p_x509CertDER;
+      delete[] p_x509CertPEM;
       ret = false;
-      goto cleanupX509write;
+      goto cleanupMpi;
     }
-    p_configuration->setCACertificate(p_x509Cert);
-    
-    m_pLogger->info(m_pStringSelfSignedSuccess);
+    delete[] p_x509CertDER;
+    p_configuration->setCACertificate(p_x509CertPEM);
     ret = true;
-    goto cleanupX509write;
     
     // Clean up and return
   cleanupMpi:
@@ -132,7 +216,6 @@ namespace Webserver {
   cleanupX509write:
     mbedtls_x509write_crt_free(crt);
     delete crt;
-  cleanupPk:
     mbedtls_pk_free(key);
   cleanupDrbg:
     mbedtls_ctr_drbg_free(ctr_drbg);

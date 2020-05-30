@@ -16,7 +16,7 @@ namespace Provisioning {
     size_t length;
     
     // Read private key from NVS
-    maxLength = m_pWebServerConfig->maxLengthPrivateKey();
+    maxLength = m_pWebServerConfig->maxLengthKey();
     delete[] m_pPrivateKey;
     m_pPrivateKey = new unsigned char[maxLength + 1];
     length = m_pStorage->getBytes("webkey", m_pPrivateKey, maxLength);
@@ -43,8 +43,8 @@ namespace Provisioning {
   bool ConfigWeb::save() {
     bool ret = true;
     
-    if(m_pWebServerConfig->hasPrivateKey()) {
-      ret &= m_pStorage->putBytes("webkey", m_pWebServerConfig->getPrivateKey(), strlen((char*) m_pWebServerConfig->getPrivateKey())) != 0;
+    if(m_pWebServerConfig->hasKey()) {
+      ret &= m_pStorage->putBytes("webkey", m_pWebServerConfig->getKey(), strlen((char*) m_pWebServerConfig->getKey())) != 0;
     }
     if(m_pWebServerConfig->hasCACertificate()) {
       ret &= m_pStorage->putBytes("webcert", m_pWebServerConfig->getCACertificate(), strlen((char*) m_pWebServerConfig->getCACertificate())) != 0;
