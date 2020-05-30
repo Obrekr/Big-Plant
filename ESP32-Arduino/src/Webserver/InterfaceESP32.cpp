@@ -5,7 +5,7 @@ namespace Webserver {
   const char* InterfaceESP32::m_pStringSelfSignedKeygenFail = "Failed to generate public key";
   const char* InterfaceESP32::m_pStringSelfSignedCertgenFail = "Failed to generate x509 certificate";
   const char* InterfaceESP32::m_pStringSelfSignedSuccess = "Successfully created self signed certificate";
-  const char* InterfaceESP32::m_pStringKeygenStart = "Starting public key generation. This will take about 11 minutes";
+  const char* InterfaceESP32::m_pStringKeygenStart = "Starting public key generation. This will take some time";
   const char* InterfaceESP32::m_pStringKeygenRNG = "Creating RNG for key generation failed";
   const char* InterfaceESP32::m_pStringKeygenSetup = "Setup for key generation failed";
   const char* InterfaceESP32::m_pStringKeygenGenerate = "Generating public key failed";

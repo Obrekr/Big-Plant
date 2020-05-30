@@ -3,7 +3,7 @@
 namespace Provisioning {
   ConfigWeb::ConfigWeb(Storage* p_storage, ConfigWiFiAP* p_configWiFiAP, Webserver::Interface* p_webserver) : m_pStorage(p_storage), m_pConfigWiFiAP(p_configWiFiAP), m_pWebserver(p_webserver) {
     m_pWebServerConfig = new Webserver::Configuration();
-    m_pPrivateKey = new unsigned char();
+    m_pKey = new unsigned char();
     m_pCACertificate = new unsigned char();
   }
   
@@ -15,16 +15,18 @@ namespace Provisioning {
     unsigned int maxLength;
     size_t length;
     
-    // Read private key from NVS
+    // Read key from NVS
     maxLength = m_pWebServerConfig->maxLengthKey();
-    delete[] m_pPrivateKey;
-    m_pPrivateKey = new unsigned char[maxLength + 1];
-    length = m_pStorage->getBytes("webkey", m_pPrivateKey, maxLength);
+    delete[] m_pKey;
+    m_pKey = new unsigned char[maxLength + 1];
+    length = m_pStorage->getBytes("webkey", m_pKey, maxLength);
     
-    // Private key may not be empty
+    // Key may not be empty
     if(length == 0) {
       return false;
     }
+    m_pKey[length] = '\0';
+    m_pWebServerConfig->setKey(m_pKey);
     
     // Read certificate from NVS
     maxLength = m_pWebServerConfig->maxLengthCACertificate();
@@ -36,6 +38,8 @@ namespace Provisioning {
     if(length == 0) {
       return false;
     }
+    m_pCACertificate[length] = '\0';
+    m_pWebServerConfig->setCACertificate(m_pCACertificate);
     
     return true;
   }
@@ -60,11 +64,10 @@ namespace Provisioning {
       return false;
     }
     char* hostnameString = Utility::format("CN=%s,O=acme,C=D", m_pConfigWiFiAP->get()->getHostname());
-    success = m_pWebserver->generateSelfSignedCertificate(m_pWebServerConfig, 1024, hostnameString, "20200101000000", "20500101000000");
+    success = m_pWebserver->generateSelfSignedCertificate(m_pWebServerConfig, 2048, hostnameString, "20200101000000", "20500101000000");
     delete[] hostnameString;
     
-    success &= save();
-    return success;
+    return success && save();
   }
   
   Webserver::Configuration* ConfigWeb::get() {

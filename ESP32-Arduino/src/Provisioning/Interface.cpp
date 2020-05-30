@@ -6,8 +6,8 @@ namespace Provisioning {
   const char* Interface::m_pStringWiFiAPDefaultSuccess = "Generated and saved default values for WiFi AP settings: %s";
   const char* Interface::m_pStringWiFiAPFail = "Got no valid WiFi AP settings";
   const char* Interface::m_pStringWebLoading = "Loading webserver settings";
-  const char* Interface::m_pStringWebSuccess = "Successfully loaded webserver settings: %s; %s";
-  const char* Interface::m_pStringWebDefaultSuccess = "Generated and saved default values for webserver settings: %s; %s";
+  const char* Interface::m_pStringWebSuccess = "Successfully loaded webserver settings:\n%s";
+  const char* Interface::m_pStringWebDefaultSuccess = "Generated and saved default values for webserver settings:\n%s";
   const char* Interface::m_pStringWebFail = "Got no valid webserver settings";
   
   Interface::Interface(Storage* p_storage, Webserver::Interface* p_webserver, Logging::Interface* p_logger) 
@@ -36,11 +36,11 @@ namespace Provisioning {
     m_pLogger->info(m_pStringWebLoading);
     if(m_pConfigWeb->load() && m_pConfigWeb->get()->hasKey() && m_pConfigWeb->get()->hasCACertificate()) {
       m_hasConfigWeb = true;
-      m_pLogger->info(m_pStringWebSuccess, m_pConfigWeb->get()->getKey(), m_pConfigWeb->get()->getCACertificate());
+      m_pLogger->info(m_pStringWebSuccess, m_pConfigWeb->get()->getCACertificate());
     } else {
       if(m_pConfigWeb->generateDefault()) {
         m_hasConfigWeb = true;
-        m_pLogger->warning(m_pStringWebDefaultSuccess, m_pConfigWeb->get()->getKey(), m_pConfigWeb->get()->getCACertificate());
+        m_pLogger->warning(m_pStringWebDefaultSuccess, m_pConfigWeb->get()->getCACertificate());
       } else {
         m_hasConfigWeb = false;
         m_pLogger->error(m_pStringWebFail);

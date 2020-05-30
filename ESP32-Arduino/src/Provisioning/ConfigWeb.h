@@ -24,7 +24,7 @@ namespace Provisioning {
       ConfigWiFiAP* m_pConfigWiFiAP;
       Webserver::Interface* m_pWebserver;
       Webserver::Configuration* m_pWebServerConfig;
-      unsigned char* m_pPrivateKey;
+      unsigned char* m_pKey;
       unsigned char* m_pCACertificate;
   };
 }
