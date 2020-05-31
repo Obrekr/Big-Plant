@@ -21,6 +21,7 @@ namespace Provisioning{
       size_t putUInt(const char* p_key, unsigned int value);
       unsigned int getUInt(const char* p_key, unsigned int defaultValue);
       
+      bool remove(const char* p_key);
     private:
       Preferences preferences;
       Logging::Interface* m_pLogger;

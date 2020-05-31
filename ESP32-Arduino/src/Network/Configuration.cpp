@@ -75,26 +75,26 @@ namespace Network {
       format("SSID='%s' Hostname='%s' IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u",
           m_pSsid,
           m_pHostname,
-          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
-          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
-          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+          m_ip & 0xFF, (m_ip >> 8) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 24) & 0xFF,
+          m_gateway & 0xFF,(m_gateway >> 8) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 24) & 0xFF, 
+          m_subnet & 0xFF, (m_subnet >> 8) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 24) & 0xFF);
     } else if (hasSSID() && !hasHostname()) {
       format("SSID='%s' IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u",
           m_pSsid,
-          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
-          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
-          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+          m_ip & 0xFF, (m_ip >> 8) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 24) & 0xFF,
+          m_gateway & 0xFF,(m_gateway >> 8) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 24) & 0xFF,
+          m_subnet & 0xFF, (m_subnet >> 8) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 24) & 0xFF);
     } else if (!hasSSID() && hasHostname()) {
       format("Hostname='%s' IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u",
           m_pHostname,
-          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
-          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
-          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+          m_ip & 0xFF, (m_ip >> 8) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 24) & 0xFF,
+          m_gateway & 0xFF,(m_gateway >> 8) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 24) & 0xFF,
+          m_subnet & 0xFF, (m_subnet >> 8) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 24) & 0xFF);
     } else {
       format("IP=%u.%u.%u.%u Gateway=%u.%u.%u.%u Subnet=%u.%u.%u.%u", 
-          (m_ip >> 24) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 8) & 0xFF, m_ip & 0xFF,
-          (m_gateway >> 24) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 8) & 0xFF, m_gateway & 0xFF,
-          (m_subnet >> 24) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 8) & 0xFF, m_subnet & 0xFF);
+          m_ip & 0xFF, (m_ip >> 8) & 0xFF, (m_ip >> 16) & 0xFF, (m_ip >> 24) & 0xFF,
+          m_gateway & 0xFF,(m_gateway >> 8) & 0xFF, (m_gateway >> 16) & 0xFF, (m_gateway >> 24) & 0xFF,
+          m_subnet & 0xFF, (m_subnet >> 8) & 0xFF, (m_subnet >> 16) & 0xFF, (m_subnet >> 24) & 0xFF);
     }
     
     return m_pStringRepresentation;

@@ -52,6 +52,10 @@ void setup() {
   // Load settings from non volatile storage
   provisioningStorage = new Provisioning::StorageESP32(loggingProvisioning);
   provisioning = new Provisioning::Interface(provisioningStorage, webserver, loggingProvisioning);
+
+  // Reset stored config to defaults
+  //provisioning->resetConfigWiFiAP();
+  //provisioning->resetConfigWeb();
   
   // Bring up networking or reboot
   if(provisioning->hasConfigWiFiAP() && provisioning->getConfigWiFiAP()->hasSSID() && provisioning->getConfigWiFiAP()->hasPassphrase()) {

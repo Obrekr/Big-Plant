@@ -40,4 +40,8 @@ namespace Provisioning {
   size_t StorageESP32::putUInt(const char* p_key, unsigned int value) {
     return preferences.putUInt(p_key, value);
   }
+  
+  bool StorageESP32::remove(const char* p_key) {
+    return preferences.remove(p_key);
+  }
 }

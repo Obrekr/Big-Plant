@@ -104,9 +104,9 @@ namespace Provisioning {
     m_pNetworkConfig->setSSID("Big Plant");
     m_pNetworkConfig->setPassphrase("bigplantwifi");
     m_pNetworkConfig->setHostname("bigplant.local");
-    m_pNetworkConfig->setIP(((192) << 24) | ((168) << 16) | ((1) << 8) | 1);
-    m_pNetworkConfig->setGateway(((192) << 24) | ((168) << 16) | ((1) << 8) | 1);
-    m_pNetworkConfig->setSubnet(((255) << 24) | ((255) << 16) | ((255) << 8) | 0);
+    m_pNetworkConfig->setIP(((192) << 0) | ((168) << 8) | ((1) << 16) | (1 << 24));
+    m_pNetworkConfig->setGateway(((192) << 0) | ((168) << 8) | ((1) << 16) | (1 << 24));
+    m_pNetworkConfig->setSubnet(((255) << 0) | ((255) << 8) | ((255) << 16) | (0 << 24));
     return save();
   }
   

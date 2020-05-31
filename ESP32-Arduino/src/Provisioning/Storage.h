@@ -15,6 +15,8 @@ namespace Provisioning{
       
       virtual size_t putUInt(const char* p_key, unsigned int value) = 0;
       virtual unsigned int getUInt(const char* p_key, unsigned int defaultValue) = 0;
+      
+      virtual bool remove(const char* p_key) = 0;
   };
 }
 #endif

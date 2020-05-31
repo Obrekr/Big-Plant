@@ -17,10 +17,12 @@ namespace Provisioning {
       bool hasConfigWiFiAP() {return m_pConfigWiFiAP != NULL && m_hasConfigWifiAP;}
       Network::Configuration* getConfigWiFiAP() {return m_pConfigWiFiAP->get();}
       bool saveConfigWiFiAP() {return m_pConfigWiFiAP->save();}
+      bool resetConfigWiFiAP() {return m_pConfigWiFiAP->generateDefault();}
       
       bool hasConfigWeb() {return m_pConfigWeb != NULL && m_hasConfigWeb;}
       Webserver::Configuration* getConfigWeb() {return m_pConfigWeb->get();}
-      bool saveConfig() {return m_pConfigWeb->save();}
+      bool saveConfigWeb() {return m_pConfigWeb->save();}
+      bool resetConfigWeb() {return m_pConfigWeb->generateDefault();}
       
     private:
       Storage* m_pStorage;
