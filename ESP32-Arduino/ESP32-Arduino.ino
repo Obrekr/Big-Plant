@@ -61,6 +61,7 @@ void setup() {
   if(provisioning->hasConfigWiFiAP() && provisioning->getConfigWiFiAP()->hasSSID() && provisioning->getConfigWiFiAP()->hasPassphrase()) {
     networking = new Network::InterfaceESP32(provisioning->getConfigWiFiAP(), networkingSTAConfig, loggingNetwork);
     networking->APstart();
+    webserver->start(provisioning->getConfigWeb());
   } else {
     loggingKernel->emergency("Failed to get valid configuration for WiFi access point");
     loggingKernel->emergency("Rebooting...");

@@ -6,7 +6,7 @@
 namespace Webserver {
   class Interface {
     public:
-      virtual bool start() = 0;
+      virtual bool start(Configuration* p_configuration) = 0;
       virtual bool stop() = 0;
     
       virtual bool generateSelfSignedCertificate(Configuration* p_configuration, unsigned int keyLength, 

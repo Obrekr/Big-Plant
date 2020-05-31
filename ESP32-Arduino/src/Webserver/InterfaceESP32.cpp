@@ -1,11 +1,24 @@
 #include "InterfaceESP32.h"
 
 namespace Webserver {
+  esp_err_t root_get_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, "<h1>Hello Secure World!</h1>", -1); // -1 = use strlen()
+    return ESP_OK;
+  }
+  const httpd_uri_t uriRoot = {.uri = "/", .method = HTTP_GET, .handler = root_get_handler};
+  
+  const char* InterfaceESP32::m_pStringWebserverStart = "Starting webserver";
+  const char* InterfaceESP32::m_pStringWebserverNoCert = "Configuration has no x509 certificate";
+  const char* InterfaceESP32::m_pStringWebserverNoKey = "Configuration has no key";
+  const char* InterfaceESP32::m_pStringWebserverStartFail = "Failed to start webserver";
+  const char* InterfaceESP32::m_pStringWebserverStartSuccess = "Successfully started webserver";
+  const char* InterfaceESP32::m_pStringWebserverStop = "Webserver stopped";
   const char* InterfaceESP32::m_pStringSelfSignedStart = "Starting generation of self signed certificate";
   const char* InterfaceESP32::m_pStringSelfSignedKeygenFail = "Failed to generate public key";
   const char* InterfaceESP32::m_pStringSelfSignedCertgenFail = "Failed to generate x509 certificate";
   const char* InterfaceESP32::m_pStringSelfSignedSuccess = "Successfully created self signed certificate";
-  const char* InterfaceESP32::m_pStringKeygenStart = "Starting public key generation. This will take some time";
+  const char* InterfaceESP32::m_pStringKeygenStart = "Starting public key generation, this will take some time";
   const char* InterfaceESP32::m_pStringKeygenRNG = "Creating RNG for key generation failed";
   const char* InterfaceESP32::m_pStringKeygenSetup = "Setup for key generation failed";
   const char* InterfaceESP32::m_pStringKeygenGenerate = "Generating public key failed";
@@ -15,8 +28,10 @@ namespace Webserver {
   const char* InterfaceESP32::m_pStringCertgenStart = "Starting x509 certificate generation";
   const char* InterfaceESP32::m_pStringCertgenRNG = "Creating RNG for key generation failed";
   const char* InterfaceESP32::m_pStringCertgenPK = "Failed to load the public key";
-  const char* InterfaceESP32::m_pStringCertgenName = "Setting domain name '%s' for certificate failed";
-  const char* InterfaceESP32::m_pStringCertgenValidFromUntil = "Setting valid from '%s' until '%s' for certificate failed";
+  const char* InterfaceESP32::m_pStringCertgenName = "Setting domain name for certificate to '%s'";
+  const char* InterfaceESP32::m_pStringCertgenNameFail = "Setting domain name '%s' for certificate failed";
+  const char* InterfaceESP32::m_pStringCertgenValidFromUntil = "Setting valid from to '%s' and until to '%s' for certificate";
+  const char* InterfaceESP32::m_pStringCertgenValidFromUntilFail = "Setting valid from '%s' until '%s' for certificate failed";
   const char* InterfaceESP32::m_pStringCertgenSerialStart = "Started calculating serial number for certificate";
   const char* InterfaceESP32::m_pStringCertgenSerial = "Generating serial number for certificate failed";
   const char* InterfaceESP32::m_pStringCertgenSave = "Saving x509 certificate";
@@ -27,11 +42,41 @@ namespace Webserver {
     
   }
   
-  bool InterfaceESP32::start() {
+  bool InterfaceESP32::start(Configuration* p_configuration) {
+    m_pLogger->info(m_pStringWebserverStart);
+    
+    // Configure https webserver
+    httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
+    if(!p_configuration->hasCACertificate()) {
+      m_pLogger->error(m_pStringWebserverNoCert);
+      return false;
+    }
+    conf.cacert_pem = p_configuration->getCACertificate();
+    conf.cacert_len = strlen((char*) p_configuration->getCACertificate() + 1);
+    
+    if(!p_configuration->hasKey()) {
+      m_pLogger->error(m_pStringWebserverNoKey);
+      return false;
+    }
+    conf.prvtkey_pem = p_configuration->getKey();
+    conf.prvtkey_len = strlen((char*) p_configuration->getKey() + 1);
+    
+    // Start the webserver
+    if(httpd_ssl_start(&m_webserver, &conf) != ESP_OK) {
+      m_pLogger->error(m_pStringWebserverStartFail);
+      return false;
+    }
+    
+    // Register URI handlers
+    httpd_register_uri_handler(m_webserver, &uriRoot);
+    
+    m_pLogger->info(m_pStringWebserverStartSuccess);
     return true;
   }
   
   bool InterfaceESP32::stop() {
+    httpd_ssl_stop(m_webserver);
+    m_pLogger->info(m_pStringWebserverStop);
     return true;
   }
   
@@ -161,14 +206,16 @@ namespace Webserver {
     mbedtls_x509write_crt_set_subject_key(crt, key);
     mbedtls_x509write_crt_set_issuer_key(crt, key);
     
+    m_pLogger->info(m_pStringCertgenName, p_domainName);
     if(mbedtls_x509write_crt_set_subject_name(crt, p_domainName) != 0 || mbedtls_x509write_crt_set_issuer_name(crt, p_domainName) != 0) {
-      m_pLogger->error(m_pStringCertgenName, p_domainName);
+      m_pLogger->error(m_pStringCertgenNameFail, p_domainName);
       ret = false;
       goto cleanupX509write;
     }
     
+    m_pLogger->info(m_pStringCertgenValidFromUntil, p_validFrom, p_validUntil);
     if(mbedtls_x509write_crt_set_validity(crt, p_validFrom, p_validUntil) != 0 || mbedtls_x509write_crt_set_basic_constraints(crt, 1, 0) != 0) {
-      m_pLogger->error(m_pStringCertgenValidFromUntil, p_validFrom, p_validUntil);
+      m_pLogger->error(m_pStringCertgenValidFromUntilFail, p_validFrom, p_validUntil);
       ret = false;
       goto cleanupX509write;
     }
@@ -197,8 +244,9 @@ namespace Webserver {
     * Instead convert DER certificate to PEM directly.
     */
     if((p_x509CertDERLength = mbedtls_x509write_crt_der(crt, p_x509CertDER, p_configuration->maxLengthCACertificate(), mbedtls_ctr_drbg_random, ctr_drbg)) < 0
-       || mbedtls_pem_write_buffer("-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n", p_x509CertDER + sizeof(p_x509CertDER) - p_x509CertDERLength,
-                                   p_x509CertDERLength, p_x509CertPEM, p_configuration->maxLengthCACertificate(), &p_x509CertPEMLength) != 0) {
+       || mbedtls_pem_write_buffer("-----BEGIN CERTIFICATE-----\n", "-----END CERTIFICATE-----\n",
+                                   p_x509CertDER + p_configuration->maxLengthCACertificate() - p_x509CertDERLength, p_x509CertDERLength,
+                                   p_x509CertPEM, p_configuration->maxLengthCACertificate(), &p_x509CertPEMLength) != 0) {
       m_pLogger->error(m_pStringCertgenSaveFail);
       delete[] p_x509CertDER;
       delete[] p_x509CertPEM;

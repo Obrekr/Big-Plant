@@ -63,7 +63,7 @@ namespace Provisioning {
     if(m_pConfigWiFiAP == NULL || !m_pConfigWiFiAP->get()->hasHostname()) {
       return false;
     }
-    char* hostnameString = Utility::format("CN=%s,O=acme,C=D", m_pConfigWiFiAP->get()->getHostname());
+    char* hostnameString = Utility::format("CN=%s,O=acme,C=DE", m_pConfigWiFiAP->get()->getHostname());
     success = m_pWebserver->generateSelfSignedCertificate(m_pWebServerConfig, 2048, hostnameString, "20200101000000", "20500101000000");
     delete[] hostnameString;
     
